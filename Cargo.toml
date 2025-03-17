@@ -1,0 +1,21 @@
+[package]
+name = "substancesearch-bot"
+version = "0.1.0"
+edition = "2021"
+authors = ["SubstanceSearch Team"]
+description = "A Discord bot for substance search functionality"
+
+[workspace]
+members = [
+    "crates/commands",
+    "crates/core",
+]
+
+[dependencies]
+substancesearch-core = { path = "crates/core" }
+substancesearch-commands = { path = "crates/commands" }
+tokio = { version = "1.36", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+serenity = { version = "0.11", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "cache"] }
+reqwest = { version = "0.11", features = ["json"] }

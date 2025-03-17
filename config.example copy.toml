@@ -1,0 +1,5 @@
+[discord]
+# Your Discord bot token
+token = ""
+# Optional: Guild ID for development (comment out for global commands)
+# guild_id = "your-guild-id-here" 

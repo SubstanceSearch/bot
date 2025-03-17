@@ -1,0 +1,19 @@
+[package]
+name = "substancesearch-commands"
+version = "0.1.0"
+edition = "2021"
+authors = ["SubstanceSearch Team"]
+description = "Command handlers for SubstanceSearch Discord bot"
+
+[dependencies]
+substancesearch-core = { path = "../core" }
+serenity = { version = "0.11", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "cache"] }
+tokio = { version = "1.36", features = ["full"] }
+tracing = "0.1"
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[lib]
+name = "substancesearch_commands"
+path = "src/lib.rs" 

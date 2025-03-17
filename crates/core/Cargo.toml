@@ -1,0 +1,13 @@
+[package]
+name = "substancesearch-core"
+version = "0.1.0"
+edition = "2021"
+authors = ["SubstanceSearch Team"]
+description = "Core functionality for SubstanceSearch Discord bot"
+
+[dependencies]
+serenity = { version = "0.11", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "cache"] }
+tokio = { version = "1.36", features = ["full"] }
+tracing = "0.1"
+config = { version = "0.13", features = ["toml"] }
+serde = { version = "1.0", features = ["derive"] } 
