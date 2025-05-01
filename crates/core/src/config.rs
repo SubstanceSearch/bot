@@ -2,15 +2,21 @@ use config::{Config, ConfigError, File};
 use serde::Deserialize;
 use std::path::Path;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
     pub discord: DiscordConfig,
+    pub anthropic: AnthropicConfig,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct DiscordConfig {
     pub token: String,
     pub guild_id: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct AnthropicConfig {
+    pub api_key: String,
 }
 
 impl Settings {

@@ -2,9 +2,17 @@ use serenity::prelude::*;
 use serenity::model::prelude::*;
 use serenity::http::Http;
 use std::sync::Arc;
+use std::any::TypeId;
 
 pub mod config;
-use config::Settings;
+pub use config::Settings;
+
+// Create a wrapper type for Settings that implements TypeMapKey
+pub struct SettingsKey;
+
+impl TypeMapKey for SettingsKey {
+    type Value = Settings;
+}
 
 pub struct Bot {
     pub http: Arc<Http>,

@@ -14,7 +14,9 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) -> Resu
         response.interaction_response_data(|data| {
             data.content("**Available Commands**\n\n\
                 `/help` - Shows this help message\n\
-                `/drug <name>` - Get information about a substance")
+                `/drug <name>` - Get information about a substance\n\
+                `/ask <question>` - Ask a question about substances or harm reduction\n\n\
+                You can also mention me (@bot) followed by your question to get information about substances or harm reduction.")
                 .ephemeral(true)
         })
     }).await

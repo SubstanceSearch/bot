@@ -5,7 +5,7 @@ use serenity::model::gateway::Activity;
 use serenity::builder::CreateApplicationCommands;
 use serenity::async_trait;
 use tracing::{error, info};
-use substancesearch_core::Bot;
+use substancesearch_core::{Bot, SettingsKey};
 use substancesearch_commands as commands;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -21,6 +21,7 @@ impl EventHandler for Handler {
                 let result = match command.data.name.as_str() {
                     "help" => commands::help::run(&ctx, &command).await,
                     "drug" => commands::drug::run(&ctx, &command).await,
+                    "ask" => commands::ask::run(&ctx, &command).await,
                     _ => Ok(()),
                 };
 
@@ -44,34 +45,50 @@ impl EventHandler for Handler {
                                 Ok(response) => {
                                     match response.json::<commands::drug::SubstanceResponse>().await {
                                         Ok(substance) => {
-                                            let new_embed = commands::drug::create_substance_embed(&substance, source);
-                                            
-                                            // Update the message with the new embed
-                                            if let Err(why) = component.message.edit(&ctx.http, |m| {
-                                                m.set_embed(new_embed)
-                                            }).await {
-                                                error!("Error updating embed: {:?}", why);
-                                            }
+                                            let embed = commands::drug::create_substance_embed(&substance, source);
+                                            component.create_interaction_response(&ctx.http, |response| {
+                                                response.interaction_response_data(|data| {
+                                                    data.add_embed(embed)
+                                                })
+                                            }).await.unwrap_or_else(|e| {
+                                                error!("Error sending response: {:?}", e);
+                                            });
                                         }
                                         Err(e) => {
-                                            error!("Error parsing substance data: {}", e);
+                                            component.create_interaction_response(&ctx.http, |response| {
+                                                response.interaction_response_data(|data| {
+                                                    data.content(format!("Error parsing substance data: {}", e))
+                                                })
+                                            }).await.unwrap_or_else(|e| {
+                                                error!("Error sending response: {:?}", e);
+                                            });
                                         }
                                     }
                                 }
                                 Err(e) => {
-                                    error!("Error fetching substance data: {}", e);
+                                    component.create_interaction_response(&ctx.http, |response| {
+                                        response.interaction_response_data(|data| {
+                                            data.content(format!("Error fetching substance data: {}", e))
+                                        })
+                                    }).await.unwrap_or_else(|e| {
+                                        error!("Error sending response: {:?}", e);
+                                    });
                                 }
                             }
                         }
                     }
-                    
-                    // Acknowledge the interaction
-                    if let Err(why) = component.defer(&ctx.http).await {
-                        error!("Error deferring component interaction: {:?}", why);
-                    }
                 }
             }
             _ => {}
+        }
+    }
+
+    async fn message(&self, ctx: Context, msg: Message) {
+        // Check if the bot was mentioned
+        if msg.mentions_me(&ctx.http).await.unwrap_or(false) {
+            if let Err(why) = commands::ask::handle_mention(&ctx, &msg).await {
+                error!("Error handling mention: {:?}", why);
+            }
         }
     }
 
@@ -82,8 +99,8 @@ impl EventHandler for Handler {
         let ctx_clone = ctx.clone();
         tokio::spawn(async move {
             loop {
-                let guild_count = ctx_clone.cache.guild_count();
-                let user_count: usize = ctx_clone.cache.guilds().iter()
+                let _guild_count = ctx_clone.cache.guild_count();
+                let _user_count: usize = ctx_clone.cache.guilds().iter()
                     .filter_map(|guild_id| ctx_clone.cache.guild(*guild_id))
                     .map(|guild| guild.member_count as usize)
                     .sum();
@@ -107,16 +124,23 @@ async fn main() {
     let bot = Bot::new().await.expect("Failed to create bot instance");
 
     // Create client
-    let mut client = Client::builder(&bot.settings.discord.token, GatewayIntents::GUILDS | GatewayIntents::GUILD_MEMBERS)
+    let mut client = Client::builder(&bot.settings.discord.token, GatewayIntents::GUILDS | GatewayIntents::GUILD_MEMBERS | GatewayIntents::GUILD_MESSAGES)
         .event_handler(Handler)
         .application_id(bot.application_id.0)
         .await
         .expect("Error creating client");
 
+    // Store settings in the client's data
+    {
+        let mut data = client.data.write().await;
+        data.insert::<SettingsKey>(bot.settings.clone());
+    }
+
     // Register commands
     let commands = vec![
         commands::help::register(),
         commands::drug::register(),
+        commands::ask::register(),
     ];
 
     // Register either globally or for a specific guild

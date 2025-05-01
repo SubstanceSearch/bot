@@ -1,5 +1,9 @@
 [discord]
 # Your Discord bot token
-token = ""
+token = "your-discord-token-here"
 # Optional: Guild ID for development (comment out for global commands)
 # guild_id = "your-guild-id-here" 
+
+[anthropic]
+# Your Anthropic API key for Claude
+api_key = "your-anthropic-api-key-here" 
